@@ -1,0 +1,233 @@
+﻿{
+  "description": "Skillset",
+  "skills": [
+    {
+      "@odata.type": "#Microsoft.Skills.Text.LanguageDetectionSkill",
+      "inputs": [
+        {
+          "name": "text",
+          "source": "/document/content"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "languageCode",
+          "targetName": "languageCode"
+        }
+      ]
+    },
+    {
+      "@odata.type": "#Microsoft.Skills.Custom.WebApiSkill",
+      "description": "Correct Offset",
+      "uri": "https://xxxxxx.azurewebsites.net/api/CorrectImageOffset?code=xxxxxxx",
+      "batchSize": 50,
+      "context": "/document",
+      "inputs": [
+        {
+          "name": "text",
+          "source": "/document/content"
+        },
+        {
+          "name": "offset",
+          "source": "/document/normalized_images/*/contentOffset"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "corrected_image_offset",
+          "targetName": "corrected_image_offset"
+        }
+      ]
+    },
+    {
+      "@odata.type": "#Microsoft.Skills.Custom.WebApiSkill",
+      "description": "StoreImage to Blob Storage",
+      "uri": "https://xxxxx.azurewebsites.net/api/ImageStore?code=xxxxxxx",
+      "batchSize": 1,
+      "context": "/document/normalized_images/*",
+      "inputs": [
+        {
+          "name": "imageData",
+          "source": "/document/normalized_images/*/data"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "imageStoreUri",
+          "targetName": "imageStoreUri"
+        }
+      ]
+    },
+    {
+      "description": "Extract text (plain and structured) from image.",
+      "@odata.type": "#Microsoft.Skills.Vision.OcrSkill",
+      "context": "/document/normalized_images/*",
+      "detectOrientation": true,
+      "inputs": [
+        {
+          "name": "image",
+          "source": "/document/normalized_images/*"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "text"
+        }
+      ]
+    },
+    {
+      "@odata.type": "#Microsoft.Skills.Vision.ImageAnalysisSkill",
+      "context": "/document/normalized_images/*",
+      "visualFeatures": [
+        "Tags",
+        "Description"
+      ],
+      "defaultLanguageCode": "en",
+      "inputs": [
+        {
+          "name": "image",
+          "source": "/document/normalized_images/*"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "tags",
+          "targetName": "imageAnalysis_Tags"
+        },
+        {
+          "name": "description",
+          "targetName": "imageAnalysis_Description"
+        }
+      ]
+    },
+    {
+      "@odata.type": "#Microsoft.Skills.Custom.WebApiSkill",
+      "description": "Generate Image Tag for showing in browser",
+      "uri": "https://xxxxx.azurewebsites.net/api/GenerateImageTag?code=xxxxxxxx",
+      "batchSize": 50,
+      "context": "/document/normalized_images/*",
+      "inputs": [
+        {
+          "name": "uri",
+          "source": "/document/normalized_images/*/imageStoreUri"
+        },
+        {
+          "name": "tags",
+          "source": "/document/normalized_images/*/imageAnalysis_Tags"
+        },
+        {
+          "name": "description",
+          "source": "/document/normalized_images/*/imageAnalysis_Description"
+        },
+        {
+          "name": "text",
+          "source": "/document/normalized_images/*/text"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "imageTag",
+          "targetName": "imageTag"
+        }
+      ]
+    },
+    {
+      "@odata.type": "#Microsoft.Skills.Text.MergeSkill",
+      "description": "Create merged_text, which includes all the textual representation of each image inserted at the right location in the content field.",
+      "context": "/document",
+      "insertPreTag": " ",
+      "insertPostTag": " ",
+      "inputs": [
+        {
+          "name": "text",
+          "source": "/document/content"
+        },
+        {
+          "name": "itemsToInsert",
+          "source": "/document/normalized_images/*/imageTag"
+        },
+        {
+          "name": "offsets",
+          "source": "/document/corrected_image_offset"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "mergedText",
+          "targetName": "merged_text"
+        }
+      ]
+    },
+    {
+      "@odata.type": "#Microsoft.Skills.Custom.WebApiSkill",
+      "description": "Move content to approprate language column",
+      "uri": "https://xxxxx.azurewebsites.net/api/SplitLanguage?code=xxxxx",
+      "batchSize": 50,
+      "context": "/document",
+      "inputs": [
+        {
+          "name": "text",
+          "source": "/document/merged_text"
+        },
+        {
+          "name": "language",
+          "source": "/document/languageCode"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "text_nl",
+          "targetName": "text_nl"
+        },
+        {
+          "name": "text_en",
+          "targetName": "text_en"
+        }
+      ]
+    },
+    {
+      "@odata.type": "#Microsoft.Skills.Text.NamedEntityRecognitionSkill",
+      "context": "/document",
+      "defaultLanguageCode": "en",
+      "inputs": [
+        {
+          "name": "text",
+          "source": "/document/content"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "persons",
+          "targetName": "persons"
+        },
+        {
+          "name": "locations",
+          "targetName": "locations"
+        },
+        {
+          "name": "organizations",
+          "targetName": "organizations"
+        }
+      ]
+    },
+    {
+      "@odata.type": "#Microsoft.Skills.Text.KeyPhraseExtractionSkill",
+      "inputs": [
+        {
+          "name": "text",
+          "source": "/document/content"
+        },
+        {
+          "name": "languageCode",
+          "source": "/document/languageCode"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "keyPhrases",
+          "targetName": "keyPhrases"
+        }
+      ]
+    }
+  ]
+}

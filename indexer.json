@@ -1,0 +1,59 @@
+﻿{
+  "name": "[IndexerName]",
+  "description": "Indexer",
+  "dataSourceName": "[DataSourceName]",
+  "targetIndexName": "[IndexName]",
+  "skillsetName": "[SkillSetName]",
+  "parameters": {
+    "configuration": {
+      "dataToExtract": "contentAndMetadata",
+      "indexedFileNameExtensions": ".docx",
+      "imageAction": "generateNormalizedImages"
+    }
+  },
+  "fieldMappings": [
+    {
+      "sourceFieldName": "metadata_storage_name",
+      "targetFieldName": "fileName"
+    },
+    {
+      "sourceFieldName": "metadata_storage_path",
+      "targetFieldName": "fileLocation"
+    },
+    {
+      "sourceFieldName": "metadata_storage_path",
+      "targetFieldName": "fileLocation"
+    }
+
+  ],
+  "outputFieldMappings": [
+    {
+      "sourceFieldName": "/document/text_nl",
+      "targetFieldName": "text_nl"
+    },
+    {
+      "sourceFieldName": "/document/text_en",
+      "targetFieldName": "text_en"
+    },
+    {
+      "sourceFieldName": "/document/languageCode",
+      "targetFieldName": "languageCode"
+    },
+    {
+      "sourceFieldName": "/document/keyPhrases",
+      "targetFieldName": "keyPhrases"
+    },
+    {
+      "sourceFieldName": "/document/persons",
+      "targetFieldName": "persons"
+    },
+    {
+      "sourceFieldName": "/document/locations",
+      "targetFieldName": "locations"
+    },
+    {
+      "sourceFieldName": "/document/organizations",
+      "targetFieldName": "organizations"
+    }
+  ]
+} 
